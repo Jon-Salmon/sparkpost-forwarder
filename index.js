@@ -62,7 +62,9 @@ app.post('/messages', (request, response) => {
         address: {
           email: process.env.FORWARD_TO
         }
-      }]
+      }],
+      open_tracking: false,
+      click_tracking: false
     }, function(err, res) {
       if (err) {
         console.error('Transmission failed: ' + JSON.stringify(err));
