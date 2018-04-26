@@ -34,12 +34,44 @@ if (process.env.FORWARD_TO === undefined) {
 
 app.get('/', (req, res) => res.send('Hello World'))
 
-app.post('/messages', (req, res) => {
-  let data = JSON.parse(JSON.stringify(req.body)),
-    message = data[0].msys.relay_message.content.email_rfc822;
-  console.log(req.body);
-  console.log(message);
-  return res.status(200).send('OK');
+app.post('/messages', (request, response) => {
+  try {
+    let data = JSON.parse(JSON.stringify(request.body)),
+      message = data[0].msys.relay_message.content.email_rfc822;
+
+    if (message.match(/^Reply-To: .*$/m)) {
+      message = message.replace(/^From: .*$/m, 'From: ' + process.env.FORWARD_FROM);
+    } else {
+      message = message.replace(/^From: .*$/m,
+        'From: ' + process.env.FORWARD_FROM +
+        '\r\nReply-To: ' + data[0].msys.relay_message.friendly_from);
+    }
+
+    message = message.replace(/Sender: .*\r\n/, '');
+
+    sp.transmissions.send({
+      transmissionBody: {
+        content: {
+          email_rfc822: message
+        },
+        recipients: [{
+          address: {
+            email: process.env.FORWARD_TO
+          }
+        }]
+      }
+    }, function(err, res) {
+      if (err) {
+        console.error('Transmission failed: ' + JSON.stringify(err));
+      } else {
+        console.log('Transmission succeeded: ' + JSON.stringify(res.body));
+      }
+    });
+
+    return response.status(200).send('OK');
+  } catch (e) {
+    return response.status(400).send('Invalid data');
+  }
 });
 
 app.listen(process.env.PORT, () => console.log('Example app listening on port ' + process.env.PORT))
