@@ -50,16 +50,14 @@ app.post('/messages', (request, response) => {
     message = message.replace(/Sender: .*\r\n/, '');
 
     sp.transmissions.send({
-      transmissionBody: {
-        content: {
-          email_rfc822: message
-        },
-        recipients: [{
-          address: {
-            email: process.env.FORWARD_TO
-          }
-        }]
-      }
+      content: {
+        email_rfc822: message
+      },
+      recipients: [{
+        address: {
+          email: process.env.FORWARD_TO
+        }
+      }]
     }, function(err, res) {
       if (err) {
         console.error('Transmission failed: ' + JSON.stringify(err));
