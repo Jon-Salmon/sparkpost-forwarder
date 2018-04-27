@@ -39,7 +39,8 @@ app.post('/messages', (request, response) => {
       token = request.get('X-MessageSystems-Webhook-Token'),
       from = config.route.FORWARD_FROM;
 
-    if (token !== config.AUTH_TOKEN) {
+    if (token !== config.keys.AUTH_TOKEN) {
+      console.error('Invalid Token');
       return response.status(503).send('Unorthorised request');
     }
 
